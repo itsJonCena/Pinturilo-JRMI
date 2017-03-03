@@ -1,5 +1,4 @@
 package Server;
-
 import Interface.Request;
 
 import java.rmi.AlreadyBoundException;

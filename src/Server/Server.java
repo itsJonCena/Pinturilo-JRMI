@@ -1,14 +1,15 @@
 package Server;
-
 import Interface.Request;
 
 import java.net.MalformedURLException;
 import java.rmi.AlreadyBoundException;
+import java.net.UnknownHostException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.net.InetAddress;
 
 /**
  * Created by Alex on 01/03/17.
@@ -21,12 +22,17 @@ public class Server{
 
 
             RequesImplementation requesImplementation = new RequesImplementation();
-            Request stub = (Request) UnicastRemoteObject.exportObject(requesImplementation,0);
+            Request stub = (Request)requesImplementation;
 
-            Registry registry = LocateRegistry.getRegistry();
+            Registry registry = LocateRegistry.createRegistry(2001);
+            
             try {
+                String hostname = InetAddress.getLocalHost().getHostAddress();
+                System.out.println("this host IP is " + hostname);
                 registry.bind("Pinturillo_JRMI",stub);
             } catch (AlreadyBoundException e) {
+                e.printStackTrace();
+            } catch ( UnknownHostException e){
                 e.printStackTrace();
             }
             //Registry registry = LocateRegistry.createRegistry(1099);
