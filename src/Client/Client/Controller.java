@@ -1,18 +1,17 @@
 package Client;
 
 import java.net.URL;
-import java.rmi.RMISecurityManager;
-import java.rmi.RemoteException;
-import java.util.Objects;
+
 import java.util.ResourceBundle;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-//import Server.Server;
+
+import ServerBd.ChatSInterface;
 import javafx.application.Platform;
-import javafx.event.Event;
+
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.canvas.Canvas;
@@ -21,6 +20,9 @@ import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import java.rmi.registry.*;
+
+
 
 /**
  * @author Alex
@@ -45,13 +47,26 @@ public class Controller implements Initializable {
 
     Boolean Drag = false;
     Timer timer = new Timer();
-    //Server server;
+    String nick;
+    ChatSInterface server = null;
+    ChatCInterface client = null;
+    //ServerBd server;
 
     @FXML private void getNickname(){
 
-        String nick = validateWord(tfNick.getText());
+        nick = validateWord(tfNick.getText());
         if (nick.compareTo("") != 0){
-            // todo validar que no hay otro usuario con ese nick
+            try {
+                nick= nick.trim();
+                Registry myreg = LocateRegistry.getRegistry("192.168.100.33",2001); // todo Cambiar IP
+                server = (ChatSInterface)myreg.lookup("RMIChat");
+                client = new ChatCImpl(nick,server);
+            }catch(Exception e) {
+                System.out.println("[System] ServerBd failed: " + e);
+            }
+
+
+
             Drag = true;
             paneRegister.setVisible(false);
             paneGame.setVisible(true);
@@ -73,7 +88,12 @@ public class Controller implements Initializable {
         tfMssg.setText("");
 
         if (word.length() > 0){
-            // Envio al servidor
+            try {
+                server.broadcast(nick+" : "+ word);
+            }catch(Exception e){
+                System.out.println("[System] ServerBd failed: " + e);
+            }
+
 
         }
     }
