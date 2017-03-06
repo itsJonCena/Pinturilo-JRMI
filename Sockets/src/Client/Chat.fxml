@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ColorPicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="456.0" prefWidth="702.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Client.Controller">
+   <children>
+      <Pane fx:id="chatPane" layoutX="400.0" layoutY="9.0" prefHeight="439.0" prefWidth="296.0" visible="false">
+         <children>
+            <Button layoutX="235.0" layoutY="388.0" mnemonicParsing="false" onAction="#sendMessage" text="Enviar" />
+            <TextField fx:id="tfChat" layoutX="6.0" layoutY="384.0" prefHeight="34.0" prefWidth="223.0" />
+            <TextArea fx:id="taChat" editable="false" layoutX="6.0" layoutY="14.0" prefHeight="365.0" prefWidth="285.0" />
+         </children>
+      </Pane>
+      <Pane fx:id="canvasPane" layoutX="1.0" layoutY="21.0" prefHeight="418.0" prefWidth="393.0" visible="false">
+         <children>
+            <Button layoutX="315.0" layoutY="5.0" mnemonicParsing="false" text="Limpiar" />
+            <Slider fx:id="sliderPensilSize" layoutX="175.0" layoutY="6.0" />
+            <ColorPicker fx:id="colorPicker" layoutX="14.0" layoutY="1.0" />
+            <Canvas fx:id="canvas" height="365.0" layoutX="9.0" layoutY="39.0" onMouseDragged="#onMousseDragged" onMousePressed="#onMousePressed" width="376.0" />
+         </children>
+      </Pane>
+      <Pane fx:id="loginPane" layoutX="209.0" layoutY="97.0" prefHeight="267.0" prefWidth="285.0">
+         <children>
+            <Label layoutX="72.0" layoutY="40.0" text="Nickname">
+               <font>
+                  <Font size="30.0" />
+               </font>
+            </Label>
+            <TextField fx:id="tfnickName" layoutX="59.0" layoutY="107.0" />
+            <Button layoutX="105.0" layoutY="154.0" mnemonicParsing="false" onAction="#connect" text="Conectar" />
+         </children>
+      </Pane>
+   </children>
+</AnchorPane>
