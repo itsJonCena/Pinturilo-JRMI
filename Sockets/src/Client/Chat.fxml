@@ -4,6 +4,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ColorPicker?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
@@ -11,24 +12,35 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="456.0" prefWidth="702.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Client.Controller">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="570.0" prefWidth="933.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Client.Controller">
    <children>
-      <Pane fx:id="chatPane" layoutX="400.0" layoutY="9.0" prefHeight="439.0" prefWidth="296.0" visible="false">
+      <Pane fx:id="chatPane" layoutX="466.0" layoutY="74.0" prefHeight="474.0" prefWidth="465.0" visible="false">
          <children>
-            <Button layoutX="235.0" layoutY="388.0" mnemonicParsing="false" onAction="#sendMessage" text="Enviar" />
-            <TextField fx:id="tfChat" layoutX="6.0" layoutY="384.0" prefHeight="34.0" prefWidth="223.0" />
-            <TextArea fx:id="taChat" editable="false" layoutX="6.0" layoutY="14.0" prefHeight="365.0" prefWidth="285.0" />
+            <TextField fx:id="tfChat" layoutX="7.0" layoutY="407.0" prefHeight="34.0" prefWidth="218.0" />
+            <Button layoutX="231.0" layoutY="411.0" mnemonicParsing="false" onAction="#sendMessage" text="Enviar" />
+            <TextArea fx:id="taChat" editable="false" layoutX="6.0" layoutY="10.0" prefHeight="386.0" prefWidth="290.0" />
+            <ListView fx:id="userList" layoutX="300.0" layoutY="10.0" prefHeight="386.0" prefWidth="155.0" />
          </children>
       </Pane>
-      <Pane fx:id="canvasPane" layoutX="1.0" layoutY="21.0" prefHeight="418.0" prefWidth="393.0" visible="false">
+      <Pane fx:id="canvasPane" layoutX="1.0" layoutY="8.0" prefHeight="534.0" prefWidth="465.0" visible="false">
          <children>
-            <Button layoutX="315.0" layoutY="5.0" mnemonicParsing="false" text="Limpiar" />
-            <Slider fx:id="sliderPensilSize" layoutX="175.0" layoutY="6.0" />
-            <ColorPicker fx:id="colorPicker" layoutX="14.0" layoutY="1.0" />
-            <Canvas fx:id="canvas" height="365.0" layoutX="9.0" layoutY="39.0" onMouseDragged="#onMousseDragged" onMousePressed="#onMousePressed" width="376.0" />
+            <Slider fx:id="sliderPensilSize" layoutX="171.0" layoutY="71.0" />
+            <ColorPicker fx:id="colorPicker" layoutX="4.0" layoutY="66.0" />
+            <Canvas fx:id="canvas" height="408.0" layoutX="5.0" layoutY="104.0" onMouseDragged="#onMousseDragged" onMousePressed="#onMousePressed" width="452.0" />
+            <Button layoutX="316.0" layoutY="66.0" mnemonicParsing="false" text="Limpiar" />
+            <Label fx:id="lbtimer" alignment="CENTER" contentDisplay="CENTER" layoutX="318.0" layoutY="11.0" prefHeight="36.0" prefWidth="59.0" text="90">
+               <font>
+                  <Font name="Avenir Black" size="30.0" />
+               </font>
+            </Label>
+            <Label fx:id="lbWord" alignment="CENTER" contentDisplay="CENTER" layoutX="40.0" layoutY="9.0" prefHeight="46.0" prefWidth="260.0" text="Label">
+               <font>
+                  <Font size="30.0" />
+               </font>
+            </Label>
          </children>
       </Pane>
-      <Pane fx:id="loginPane" layoutX="209.0" layoutY="97.0" prefHeight="267.0" prefWidth="285.0">
+      <Pane fx:id="loginPane" layoutX="321.0" layoutY="143.0" prefHeight="267.0" prefWidth="285.0">
          <children>
             <Label layoutX="72.0" layoutY="40.0" text="Nickname">
                <font>

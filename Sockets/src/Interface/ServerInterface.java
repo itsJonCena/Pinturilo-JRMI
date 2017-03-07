@@ -12,8 +12,8 @@ public interface ServerInterface extends Remote {
 
     public void test()throws RemoteException;
 
-    public void messege(String message, String name) throws RemoteException;
-    public void sendX_Y(double X, double Y, double lineWidth,String paint) throws RemoteException;
+    public int messege(boolean onGuess, String message, String name) throws RemoteException;
+    public void sendX_Y(String name, double X, double Y, double lineWidth,String paint) throws RemoteException;
     public boolean checkNicknameInServer(String name) throws RemoteException;
-    public void connect(String nickname, String ip) throws RemoteException;
+    public boolean connect(String nickname, String ip) throws RemoteException;
 }

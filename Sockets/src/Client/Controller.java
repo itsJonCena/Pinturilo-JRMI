@@ -10,10 +10,13 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import Interface.ServerInterface;
+import javafx.application.Platform;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -35,6 +38,8 @@ public class Controller implements Initializable {
     @FXML Canvas canvas;
     @FXML ColorPicker colorPicker;
     @FXML Slider sliderPensilSize;
+    @FXML Label lbtimer;
+    @FXML Label lbWord;
 
     @FXML Pane chatPane;
     @FXML TextField tfChat;
@@ -42,6 +47,8 @@ public class Controller implements Initializable {
 
     @FXML Pane loginPane;
     @FXML TextField tfnickName;
+
+    @FXML ListView<String> userList;
 
 
 
@@ -52,12 +59,22 @@ public class Controller implements Initializable {
 
     private Socket socketListener;
     private DataInputStream flujodeEntrada;
+
+    ServerSocket socketCanvas;
     private DataInputStream inputStream;
     private ObjectInputStream objectInput;
+
+    Socket gameInstruccionsListener;
+    private DataInputStream instruccionsInput;
 
     private Boolean chatRunning = true;
     private Boolean print = true;
     private boolean draw = false;
+    private boolean onGame = true; //thread instruccions
+    private boolean chatOnGess;
+
+    private Timer timer = new Timer();
+
 
     TextInputDialog dialog = new TextInputDialog();
     Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
@@ -69,7 +86,6 @@ public class Controller implements Initializable {
     String serverAddress="";
 
 
-    ServerSocket socketCanvas;
 
     @FXML private void connect(){
         nickName = validateWord(tfnickName.getText());
@@ -89,20 +105,15 @@ public class Controller implements Initializable {
             try {
                 if (server.checkNicknameInServer(nickName)){
 
-                    canvasPane.setVisible(true);
-                    chatPane.setVisible(true);
-                    loginPane.setVisible(false);
-
-                    server.connect(nickName,ip);
-
-
-                    canvasThread.restart(); //Todo mover a donde sera turno de otro jugador
+                    if(server.connect(nickName,ip)){
+                        chatPane.setVisible(true);
+                        loginPane.setVisible(false);
+                    }
 
 
                 }else {
                     warning.setContentText("Nickname already in use");
                     warning.showAndWait();
-                    //todo Alert Nombre en uso
                 }
 
             } catch (RemoteException e) {
@@ -111,7 +122,6 @@ public class Controller implements Initializable {
             }
         }else {
             System.err.println("Faile to connect: return false in line 74");
-            //Todo Alert con mensaje "entrada no valida"
         }
 
     }
@@ -122,14 +132,16 @@ public class Controller implements Initializable {
 
         if (word.compareTo("") != 0){
             try {
-                server.messege(word,nickName);
+                server.messege(chatOnGess,word,nickName);
 
             } catch (RemoteException e) {
                 System.err.println("Failed to send message: line 94");
                 e.printStackTrace();
             }
         }else {
-            //todo Alert con error "mensaje no valido"
+            error.setTitle("Message Error!! ");
+            error.setContentText("Invalid message!!");
+            error.show();
         }
 
 
@@ -145,12 +157,10 @@ public class Controller implements Initializable {
 
                     flujodeEntrada = new DataInputStream(socketListener.getInputStream());
                     while (chatRunning){
+
                         String mss = flujodeEntrada.readUTF();
-
                         taChat.appendText(mss+"\n");
-
                     }
-
                     return null;
                 }
             };
@@ -178,33 +188,20 @@ public class Controller implements Initializable {
                         String canvasString = inputStream.readUTF();
                         String[] datas = canvasString.split(" ");
                         if (datas.length > 0 && datas != null){
-                            System.out.println("datas[0]"+datas[0]);
-                            System.out.println("datas[1]"+datas[1]);
-                            System.out.println("datas[2]"+datas[2]);
-                            System.out.println("datas[3]"+datas[3]);
+                            //System.out.println("datas[0]"+datas[0]);
+                            //System.out.println("datas[1]"+datas[1]);
+                            //System.out.println("datas[2]"+datas[2]);
+                            //System.out.println("datas[3]"+datas[3]);
 
                             gc.lineTo(Double.parseDouble(datas[0]),Double.parseDouble(datas[1]));
                             gc.setStroke(Paint.valueOf(datas[3]));
-                            gc.setLineWidth(Double.parseDouble(datas[2])); //todo convertir a double datas[2]
+                            gc.setLineWidth(Double.parseDouble(datas[2]));
                             gc.stroke();
                             datas = null;
                         }
 
 
-                        //System.out.println("Canvas: "+canvasString);
                     }
-                    //*/
-                    /*objectInput = new ObjectInputStream(socketObjectInput.getInputStream());
-
-                    while (print){
-                        //String canvasString = (String) objectInput.readUTF();
-
-                        Map<String,Object> datas = (Map<String, Object>) objectInput.readObject();
-
-                        System.out.println(datas);
-                        //System.out.println("Canvas: "+canvasString);
-                    }
-                    */
                     return null;
                 }
             };
@@ -232,7 +229,8 @@ public class Controller implements Initializable {
 
 
                     } catch (IOException e) {
-                        e.printStackTrace();
+
+                        //e.printStackTrace();
                     }
 
                     return null;
@@ -241,6 +239,81 @@ public class Controller implements Initializable {
         }
     };
 
+    Service<Void> instruccionsThread = new Service<Void>() {
+        @Override
+        protected Task<Void> createTask() {
+            return new Task<Void>() {
+                @Override
+                protected Void call() throws Exception {
+
+                    /**
+                     * Socket para recibir las instrucciones del servidor a lo largo del juego
+                     */
+                    ServerSocket gameInstruccions = new ServerSocket(2004);
+                    System.out.println("Socket de instrucciones: esperando servidor ...");
+                    gameInstruccionsListener = gameInstruccions.accept();
+                    System.out.println("Socket de instrucciones: Listo ");
+
+                    instruccionsInput = new DataInputStream(gameInstruccionsListener.getInputStream());
+
+                    while (onGame){
+
+                        String inst = instruccionsInput.readUTF();
+                        String[] split = inst.split(",");
+
+
+
+                        switch (Integer.parseInt(split[0])){
+                            case 0:
+                                gameOver();
+                                break;
+                            case 1: // Start game
+                                System.out.println(" Start Game");
+                                canvasPane.setVisible(true);
+                                break;
+                            case 2: // draw
+                                drawMode(split[1]);
+                                break;
+                            case 3:// gess word
+                                chatOnGess = Boolean.parseBoolean(split[1]);
+                                guessMode(split[2]);
+                                break;
+
+                        }
+
+                    }
+
+                    return null;
+                }
+            };
+        }
+    };
+
+    private void guessMode(String s){
+        timer.schedule(timerTask,10,1000);
+        System.out.println(nickName+": on Guess mode");
+        draw = false;
+
+
+        lbWord.setText(s);
+
+    }
+
+    private void drawMode(String s){
+        timer.schedule(timerTask,10,1000);
+        System.out.println(nickName+": on Drawing mode");
+        draw = true;
+        Platform.runLater(()->lbWord.setText(s));
+
+    }
+
+    private void gameOver(){
+        System.out.println("Game over!!");
+    }
+
+    private void updateUsersList(){
+
+    }
 
     @FXML private void onMousePressed(MouseEvent e){
         double X = e.getX(),Y = e.getY();
@@ -252,9 +325,9 @@ public class Controller implements Initializable {
             gc.stroke();
 
         try {
-            server.sendX_Y(X,Y,sliderPensilSize.getValue(),""+colorPicker.getValue());
+            server.sendX_Y(nickName,X,Y,sliderPensilSize.getValue(),""+colorPicker.getValue());
         } catch (RemoteException e1) {
-            e1.printStackTrace();
+            //e1.printStackTrace();
         }
         }
 
@@ -269,9 +342,9 @@ public class Controller implements Initializable {
             gc.stroke();
 
         try {
-            server.sendX_Y(X,Y,sliderPensilSize.getValue(),""+colorPicker.getValue().toString());
+            server.sendX_Y(nickName,X,Y,sliderPensilSize.getValue(),""+colorPicker.getValue().toString());
         } catch (RemoteException e1) {
-            e1.printStackTrace();
+            //e1.printStackTrace();
         }
 
         }
@@ -287,7 +360,6 @@ public class Controller implements Initializable {
         Optional<String> result =   dialog.showAndWait();
         if (result.isPresent()){
 
-            //todo validar ip con el metodo validateAddress()
             serverAddress = result.get();
 
             //RMI
@@ -299,7 +371,6 @@ public class Controller implements Initializable {
                 server = (ServerInterface) myreg.lookup("Pinturillo");
                 //myreg.rebind("Pinturillo",server);
 
-                //server.test(); todo talvez lo utilice despues
                 System.out.println("Server connetion enable ...");
 
                 return true;
@@ -307,10 +378,9 @@ public class Controller implements Initializable {
             } catch (RemoteException e) {
                 System.err.println("Error to connect with server :c");
 
-                //Todo Alert
-                e.printStackTrace();
+                //e.printStackTrace();
             } catch (NotBoundException e) {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
 
 
@@ -364,12 +434,11 @@ public class Controller implements Initializable {
         try {
             socketCanvas = new ServerSocket(2003);
         } catch (IOException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
-
         socketsWait.restart();
-        //canvasThread.restart(); //Todo mover a donde sera turno de otro jugador
-
+        instruccionsThread.restart();
+        canvasThread.restart();
 
     }
 
@@ -394,6 +463,26 @@ public class Controller implements Initializable {
 
         return "";
     }
+
+    private TimerTask timerTask = new TimerTask() {
+        int t = 90;
+
+        public void run() {
+            if (t > 0){
+                Platform.runLater(() -> lbtimer.setText(""+t));
+                t--;
+            }else{
+                this.cancel();
+                Platform.runLater( () ->{
+                    gc.setFill(Color.WHITE);
+                    gc.fillRect(0,0,canvas.getWidth(),canvas.getHeight());
+                    //gc = null;
+                    draw = false;
+                });
+            }
+
+        }
+    };
 
 
 }
